@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.time.LocalDateTime;
+
 class Book {
     private String title;
     private String author;
@@ -47,12 +49,14 @@ class Member {
     private String memberId;
     private Book[] borrowedBooks;
     private int booksBorrowed;
+    private List<String> borrowingHistory;  // List to store borrowing history 
 
     public Member(String name, String memberId) {
         this.name = name;
         this.memberId = memberId;
         this.borrowedBooks = new Book[3]; // Max 3 books
         this.booksBorrowed = 0;
+        this.borrowingHistory = new ArrayList<>();  // Initialize history list
     }
 
     // Add this getter method
@@ -65,6 +69,9 @@ class Member {
             borrowedBooks[booksBorrowed] = book;
             booksBorrowed++;
             book.borrowBook();
+
+            // Record the borrowing event in history with timestamp
+            borrowingHistory.add("Borrowed: " + book.getTitle() + " at " + LocalDateTime.now());
         } else {
             System.out.println("Cannot borrow more than 3 books.");
         }
@@ -76,10 +83,22 @@ class Member {
                 book.returnBook();
                 borrowedBooks[i] = null;
                 booksBorrowed--;
+                
+                // Record the return event in history with timestamp
+                borrowingHistory.add("Returned: " + book.getTitle() + " at " + LocalDateTime.now());
                 break;
             }
         }
     }
+
+    // Method to view borrowing history
+    public void viewBorrowingHistory() {
+        System.out.println("\nBorrowing History for " + name + ":");
+        for (String record : borrowingHistory) {
+            System.out.println(record);
+        }
+    }
+
 }
 
 
@@ -161,6 +180,9 @@ public class Main {
         // Returning a Book
         System.out.println("\n--- Returning a Book ---");
         member1.returnBook(book1);  // Alice returns '1984'
+
+        // View Borrowing History
+        member1.viewBorrowingHistory();
 
         // List all Books
         System.out.println("\n--- Listing All Books in Library ---");
