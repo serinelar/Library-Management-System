@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 class Book {
     private String title;
     private String author;
@@ -26,6 +29,11 @@ class Book {
         } else {
             System.out.println(title + " is already borrowed.");
         }
+    }
+
+    // Getter for author
+    public String getAuthor() {
+        return author;
     }
 
     public void returnBook() {
@@ -105,30 +113,66 @@ class Library {
             System.out.println(books[i].getTitle());
         }
     }
+
+    public List<Book> searchBook(String query) {
+    List<Book> foundBooks = new ArrayList<>();
+    for (int i = 0; i < bookCount; i++) {
+        if (books[i].getTitle().contains(query) || books[i].getAuthor().contains(query)) {
+            foundBooks.add(books[i]);
+        }
+    }
+    return foundBooks;
+}
 }
 
 public class Main {
     public static void main(String[] args) {
+        // Initialize Library
         Library library = new Library();
 
-        // Add books
+        // Adding Books to Library
         Book book1 = new Book("1984", "George Orwell", "ISBN001");
         Book book2 = new Book("To Kill a Mockingbird", "Harper Lee", "ISBN002");
+        Book book3 = new Book("The Great Gatsby", "F. Scott Fitzgerald", "ISBN003");
 
         library.addBook(book1);
         library.addBook(book2);
+        library.addBook(book3);
 
-        // Register members
+        // Registering Members
         Member member1 = new Member("Alice", "M001");
+        Member member2 = new Member("Bob", "M002");
 
         library.registerMember(member1);
+        library.registerMember(member2);
 
-        // Borrow books
-        member1.borrowBook(book1);
+        // Borrowing a Book
+        System.out.println("\n--- Borrowing a Book ---");
+        member1.borrowBook(book1);  // Alice borrows '1984'
+        member2.borrowBook(book1);  // Bob tries to borrow '1984', but it's already borrowed
 
-        // Return books
-        member1.returnBook(book1);
+        // Returning a Book
+        System.out.println("\n--- Returning a Book ---");
+        member1.returnBook(book1);  // Alice returns '1984'
 
-        library.listBooks();
+        // List all Books
+        System.out.println("\n--- Listing All Books in Library ---");
+        library.listBooks();  // Should display all books
+
+        // Search for a Book
+        System.out.println("\n--- Searching for a Book ---");
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter title or author to search: ");
+        String query = scanner.nextLine();
+        List<Book> results = library.searchBook(query);
+
+        if (results.isEmpty()) {
+            System.out.println("No books found.");
+        } else {
+            System.out.println("Found books:");
+            for (Book book : results) {
+                System.out.println(book.getTitle() + " by " + book.getAuthor());
+            }
+        }
     }
 }
