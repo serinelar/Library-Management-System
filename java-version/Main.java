@@ -116,8 +116,15 @@ class Library {
 
     public List<Book> searchBook(String query) {
     List<Book> foundBooks = new ArrayList<>();
+    query = query.toLowerCase();  // Convert the query to lowercase for case-insensitive search
+
     for (int i = 0; i < bookCount; i++) {
-        if (books[i].getTitle().contains(query) || books[i].getAuthor().contains(query)) {
+        // Convert both title and author to lowercase before comparing
+        String titleLower = books[i].getTitle().toLowerCase();
+        String authorLower = books[i].getAuthor().toLowerCase();
+
+        // Check if the query is contained in either the title or the author
+        if (titleLower.contains(query) || authorLower.contains(query)) {
             foundBooks.add(books[i]);
         }
     }
