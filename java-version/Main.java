@@ -2,18 +2,45 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 class Book {
     private String title;
     private String author;
     private String isbn;
     private boolean isBorrowed;
+    private LocalDate borrowDate; // Track when the book was borrowed
+    private int borrowPeriod = 14; // Set the default borrowing period (e.g., 14 days)
 
-    public Book(String title, String author, String isbn) {
+     public Book(String title, String author, String isbn) {
         this.title = title;
         this.author = author;
         this.isbn = isbn;
         this.isBorrowed = false;
+    }
+
+    public void borrowBook() {
+        if (!isBorrowed) {
+            isBorrowed = true;
+            borrowDate = LocalDate.now(); // Set the borrow date
+            System.out.println(title + " has been borrowed.");
+        } else {
+            System.out.println(title + " is already borrowed.");
+        }
+    }
+
+    public void returnBook() {
+        isBorrowed = false;
+        borrowDate = null; // Reset borrow date when returned
+        System.out.println(title + " has been returned.");
+    }
+
+    // New method to check if borrowing time is up
+    public boolean isBorrowingExpired() {
+        if (borrowDate != null) {
+            return LocalDate.now().isAfter(borrowDate.plusDays(borrowPeriod));
+        }
+        return false;
     }
 
     public String getTitle() {
@@ -24,23 +51,9 @@ class Book {
         return isBorrowed;
     }
 
-    public void borrowBook() {
-        if (!isBorrowed) {
-            isBorrowed = true;
-            System.out.println(title + " has been borrowed.");
-        } else {
-            System.out.println(title + " is already borrowed.");
-        }
-    }
-
     // Getter for author
     public String getAuthor() {
         return author;
-    }
-
-    public void returnBook() {
-        isBorrowed = false;
-        System.out.println(title + " has been returned.");
     }
 }
 
@@ -49,31 +62,37 @@ class Member {
     private String memberId;
     private Book[] borrowedBooks;
     private int booksBorrowed;
-    private List<String> borrowingHistory;  // List to store borrowing history 
+    private List<String> borrowingHistory;
+    private String membershipTier; // New attribute
 
-    public Member(String name, String memberId) {
+    public Member(String name, String memberId, String membershipTier) {
         this.name = name;
         this.memberId = memberId;
-        this.borrowedBooks = new Book[3]; // Max 3 books
+        this.membershipTier = membershipTier;
+        this.borrowedBooks = new Book[getMaxBorrowLimit()]; // Set max limit based on tier
         this.booksBorrowed = 0;
-        this.borrowingHistory = new ArrayList<>();  // Initialize history list
+        this.borrowingHistory = new ArrayList<>();
     }
 
-    // Add this getter method
-    public String getName() {
-        return name;
+    // New method to determine max borrow limit based on membership tier
+    private int getMaxBorrowLimit() {
+        switch (membershipTier.toLowerCase()) {
+            case "premium":
+                return 5; // Example limit for premium members
+            case "regular":
+            default:
+                return 3; // Default limit for regular members
+        }
     }
 
     public void borrowBook(Book book) {
-        if (booksBorrowed < 3 && !book.isBorrowed()) {
+        if (booksBorrowed < getMaxBorrowLimit() && !book.isBorrowed()) {
             borrowedBooks[booksBorrowed] = book;
             booksBorrowed++;
             book.borrowBook();
-
-            // Record the borrowing event in history with timestamp
             borrowingHistory.add("Borrowed: " + book.getTitle() + " at " + LocalDateTime.now());
         } else {
-            System.out.println("Cannot borrow more than 3 books.");
+            System.out.println("Cannot borrow more than " + getMaxBorrowLimit() + " books.");
         }
     }
 
@@ -97,6 +116,14 @@ class Member {
         for (String record : borrowingHistory) {
             System.out.println(record);
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Book[] getBorrowedBooks() {
+        return borrowedBooks;
     }
 
 }
@@ -133,6 +160,10 @@ class Library {
         }
     }
 
+    public Member[] getMembers() {
+    return members;
+    }
+
     public List<Book> searchBook(String query) {
     List<Book> foundBooks = new ArrayList<>();
     query = query.toLowerCase();  // Convert the query to lowercase for case-insensitive search
@@ -166,8 +197,8 @@ public class Main {
         library.addBook(book3);
 
         // Registering Members
-        Member member1 = new Member("Alice", "M001");
-        Member member2 = new Member("Bob", "M002");
+        Member member1 = new Member("Alice", "M001", "regular");
+        Member member2 = new Member("Bob", "M002", "premium");
 
         library.registerMember(member1);
         library.registerMember(member2);
@@ -176,6 +207,7 @@ public class Main {
         System.out.println("\n--- Borrowing a Book ---");
         member1.borrowBook(book1);  // Alice borrows '1984'
         member2.borrowBook(book1);  // Bob tries to borrow '1984', but it's already borrowed
+        checkExpiredBooks(library);
 
         // Returning a Book
         System.out.println("\n--- Returning a Book ---");
@@ -204,4 +236,17 @@ public class Main {
             }
         }
     }
+
+    public static void checkExpiredBooks(Library library) {
+        for (Member member : library.getMembers()) {
+            if (member != null) {
+                for (Book book : member.getBorrowedBooks()) {
+                    if (book != null && book.isBorrowingExpired()) {
+                        System.out.println("Reminder: The book " + book.getTitle() + " is overdue for member " + member.getName());
+                    }
+                }
+            }
+        }
+    }
 }
+
