@@ -10,20 +10,28 @@ class Book {
     private String isbn;
     private boolean isBorrowed;
     private LocalDate borrowDate; // Track when the book was borrowed
-    private int borrowPeriod = 14; // Set the default borrowing period (e.g., 14 days)
+    // private int borrowPeriod = 14; // Set the default borrowing period (e.g., 14 days)
+    private int borrowPeriod = 1; // Set to 1 day for quick testing
 
-     public Book(String title, String author, String isbn) {
+
+    public Book(String title, String author, String isbn) {
         this.title = title;
         this.author = author;
         this.isbn = isbn;
         this.isBorrowed = false;
     }
 
-    public void borrowBook() {
+    public void borrowBook(boolean simulateOverdue) {
         if (!isBorrowed) {
             isBorrowed = true;
             borrowDate = LocalDate.now(); // Set the borrow date
-            System.out.println(title + " has been borrowed.");
+
+            if (simulateOverdue) {
+            // Set the borrow date in the past to simulate an overdue book
+            borrowDate = borrowDate.minusDays(borrowPeriod + 1); // Borrow date beyond the period
+        }
+        
+        System.out.println(title + " has been borrowed.");
         } else {
             System.out.println(title + " is already borrowed.");
         }
@@ -55,6 +63,15 @@ class Book {
     public String getAuthor() {
         return author;
     }
+
+    public LocalDate getBorrowDate() {
+    return borrowDate;
+    }
+    
+    public LocalDate getDueDate() {
+    return borrowDate != null ? borrowDate.plusDays(borrowPeriod) : null;
+    }
+
 }
 
 class Member {
@@ -85,11 +102,12 @@ class Member {
         }
     }
 
-    public void borrowBook(Book book) {
+    public void borrowBook(Book book, boolean simulateOverdue) {
         if (booksBorrowed < getMaxBorrowLimit() && !book.isBorrowed()) {
             borrowedBooks[booksBorrowed] = book;
             booksBorrowed++;
-            book.borrowBook();
+            // book.borrowBook();
+            book.borrowBook(simulateOverdue); // Pass simulateOverdue boolean
             borrowingHistory.add("Borrowed: " + book.getTitle() + " at " + LocalDateTime.now());
         } else {
             System.out.println("Cannot borrow more than " + getMaxBorrowLimit() + " books.");
@@ -180,7 +198,21 @@ class Library {
     }
     return foundBooks;
 }
+
+    public void notifyOverdueBooks() {
+    for (Member member : members) {
+        if (member != null) {
+            for (Book book : member.getBorrowedBooks()) {
+                if (book != null && book.isBorrowingExpired()) {
+                    System.out.println("Reminder: The book \"" + book.getTitle() + "\" is overdue for member " + member.getName() + ". Due date was " + book.getDueDate());
+                }
+            }
+        }
+    }
 }
+
+}
+
 
 public class Main {
     public static void main(String[] args) {
@@ -205,8 +237,19 @@ public class Main {
 
         // Borrowing a Book
         System.out.println("\n--- Borrowing a Book ---");
-        member1.borrowBook(book1);  // Alice borrows '1984'
-        member2.borrowBook(book1);  // Bob tries to borrow '1984', but it's already borrowed
+        // member1.borrowBook(book1);  // Alice borrows '1984'
+        // member2.borrowBook(book1);  // Bob tries to borrow '1984', but it's already borrowed
+
+        // Borrow a book with overdue simulation
+        System.out.println("\n--- Borrowing a Book with Overdue Simulation ---");
+        member1.borrowBook(book1, true);  // Alice borrows '1984' with an overdue simulation
+
+        // Notify overdue books
+        System.out.println("\n--- Checking for Overdue Books ---");
+        library.notifyOverdueBooks(); // Call to notify overdue books
+
+
+        // Check for expired books (if any)
         checkExpiredBooks(library);
 
         // Returning a Book
@@ -235,8 +278,7 @@ public class Main {
                 System.out.println(book.getTitle() + " by " + book.getAuthor());
             }
         }
-    }
-
+    }  
     public static void checkExpiredBooks(Library library) {
         for (Member member : library.getMembers()) {
             if (member != null) {
@@ -249,4 +291,5 @@ public class Main {
         }
     }
 }
+
 
